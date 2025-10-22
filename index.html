@@ -1,0 +1,23 @@
+<!doctype html>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Test AR – quadro verticale</title>
+<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+
+<h2>Test AR – clicca il bottone</h2>
+<model-viewer id="mv"
+  src="2quadro-verticale-40x60.glb.glb"
+  ios-src="2quadro-verticale-40x60.usdz"
+  ar ar-modes="quick-look scene-viewer webxr"
+  ar-placement="wall"
+  ar-scale="fixed"
+  camera-controls
+  style="width:1px;height:1px;opacity:0;pointer-events:none"></model-viewer>
+
+<button onclick="document.getElementById('mv').activateAR()"
+        style="padding:12px 16px;border:0;border-radius:10px;background:#111827;color:#fff;font-weight:bold">
+  🎨 Vedi in AR (scala reale)
+</button>
+
+<p>Se serve, link diretto iPhone: 
+  <a rel="ar" href="2quadro-verticale.usdz#allowsContentScaling=0">apri in Quick Look</a>
+</p>
