@@ -8,7 +8,7 @@
   <!-- model-viewer -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 
-  <link rel="stylesheet" href="style.css" />
+  <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <header class="topbar">
@@ -16,29 +16,28 @@
     <p>Seleziona uno dei 6 formati: 4 verticali (60×40) e 2 orizzontali (40×60).</p>
   </header>
 
-  <!-- Galleria scelte -->
+  <!-- Selettore quadri -->
   <section class="picker">
-    <!-- Usa le tue immagini reali; per ora metto placeholder -->
     <!-- 4 verticali -->
-    <button class="card" data-id="v1" data-orient="verticale" data-label="Verticale 60×40" data-img="assets/art/v1.jpg">
-      <img src="assets/thumbs/v1.jpg" alt="Quadro verticale 1" /><span>Verticale 60×40 #1</span>
+    <button class="card" data-id="v1" data-orient="verticale" data-label="Verticale 60×40 #1" data-img="./quadro-anteprima.jpg">
+      <img src="./quadro-anteprima.jpg" alt="Quadro verticale 1" /><span>Verticale 60×40 #1</span>
     </button>
-    <button class="card" data-id="v2" data-orient="verticale" data-label="Verticale 60×40" data-img="assets/art/v2.jpg">
-      <img src="assets/thumbs/v2.jpg" alt="Quadro verticale 2" /><span>Verticale 60×40 #2</span>
+    <button class="card" data-id="v2" data-orient="verticale" data-label="Verticale 60×40 #2" data-img="./quadro-anteprima.jpg">
+      <img src="./quadro-anteprima.jpg" alt="Quadro verticale 2" /><span>Verticale 60×40 #2</span>
     </button>
-    <button class="card" data-id="v3" data-orient="verticale" data-label="Verticale 60×40" data-img="assets/art/v3.jpg">
-      <img src="assets/thumbs/v3.jpg" alt="Quadro verticale 3" /><span>Verticale 60×40 #3</span>
+    <button class="card" data-id="v3" data-orient="verticale" data-label="Verticale 60×40 #3" data-img="./quadro-anteprima.jpg">
+      <img src="./quadro-anteprima.jpg" alt="Quadro verticale 3" /><span>Verticale 60×40 #3</span>
     </button>
-    <button class="card" data-id="v4" data-orient="verticale" data-label="Verticale 60×40" data-img="assets/art/v4.jpg">
-      <img src="assets/thumbs/v4.jpg" alt="Quadro verticale 4" /><span>Verticale 60×40 #4</span>
+    <button class="card" data-id="v4" data-orient="verticale" data-label="Verticale 60×40 #4" data-img="./quadro-anteprima.jpg">
+      <img src="./quadro-anteprima.jpg" alt="Quadro verticale 4" /><span>Verticale 60×40 #4</span>
     </button>
 
     <!-- 2 orizzontali -->
-    <button class="card" data-id="h1" data-orient="orizzontale" data-label="Orizzontale 40×60" data-img="assets/art/h1.jpg">
-      <img src="assets/thumbs/h1.jpg" alt="Quadro orizzontale 1" /><span>Orizzontale 40×60 #1</span>
+    <button class="card" data-id="h1" data-orient="orizzontale" data-label="Orizzontale 40×60 #1" data-img="./quadro-anteprima.jpg">
+      <img src="./quadro-anteprima.jpg" alt="Quadro orizzontale 1" /><span>Orizzontale 40×60 #1</span>
     </button>
-    <button class="card" data-id="h2" data-orient="orizzontale" data-label="Orizzontale 40×60" data-img="assets/art/h2.jpg">
-      <img src="assets/thumbs/h2.jpg" alt="Quadro orizzontale 2" /><span>Orizzontale 40×60 #2</span>
+    <button class="card" data-id="h2" data-orient="orizzontale" data-label="Orizzontale 40×60 #2" data-img="./quadro-anteprima.jpg">
+      <img src="./quadro-anteprima.jpg" alt="Quadro orizzontale 2" /><span>Orizzontale 40×60 #2</span>
     </button>
   </section>
 
@@ -46,19 +45,20 @@
   <section class="viewer-wrap">
     <div class="meta">
       <h2 id="selLabel">Seleziona un quadro</h2>
-      <p class="hint">
-        Dimensioni reali:<br>
-        <span id="sizeInfo">—</span>
-      </p>
+      <p class="hint">Dimensioni reali:<br><span id="sizeInfo">—</span></p>
       <div class="cta">
         <button id="enterAR" class="primary">Apri in AR</button>
       </div>
+      <p class="tip">
+        Suggerimento: spostati davanti a una parete libera. L’AR posizionerà il quadro
+        alla scala corretta (60×40 o 40×60 cm).
+      </p>
     </div>
 
-    <!-- Un solo model-viewer; cambiamo orientamento e texture via JS -->
+    <!-- Un solo model-viewer; cambiamo orientamento e modello via JS -->
     <model-viewer id="mv"
-      src="assets/models/frame-vertical.glb"
-      ios-src="assets/models/frame-vertical.usdz"
+      src="./4quadro-verticale-40x60.glb"
+      ios-src="./4quadro-verticale-40x60.usdz"
       ar ar-modes="webxr scene-viewer quick-look"
       ar-scale="fixed"
       camera-controls
@@ -66,15 +66,18 @@
       shadow-intensity="0.2"
       disable-pan
       style="width:100%;height:520px;background:#f7f7f7;border-radius:16px">
-      <!-- Poster mentre carica -->
       <div class="poster" slot="poster">Caricamento…</div>
     </model-viewer>
   </section>
 
   <footer class="foot">
-    <small>Nota: per iOS l’apertura AR usa Quick Look. Se su alcuni iPhone scarica il file invece di aprirlo, è un problema di intestazione MIME del .usdz. Lo sistemiamo dopo.</small>
+    <small>
+      Nota iOS: se su alcuni iPhone il .usdz viene scaricato invece di aprirsi, dipende dal MIME
+      su GitHub Pages. In seguito potremo spostare i file .usdz su un hosting che imposti
+      <code>model/vnd.usdz+zip</code>.
+    </small>
   </footer>
 
-  <script src="script.js"></script>
+  <script src="./script.js"></script>
 </body>
 </html>
