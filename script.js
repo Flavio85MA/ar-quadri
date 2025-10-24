@@ -1,3 +1,4 @@
+// Mappa file (sono tutti in root)
 const MODELS = {
   "veglia_sul_mare": {
     glb: "veglia_sul_mare.glb",
@@ -24,7 +25,7 @@ const MODELS = {
     usdz: "maremma.usdz",
     label: "Maremma"
   },
-  "tramonto_d&#39;oro": { // chiave dall'onclick in HTML
+  "tramonto_d&#39;oro": { // chiave dall'HTML (apostrofo codificato)
     glb: "tramonto_d'oro.glb",
     usdz: "tramonto_d'oro.usdz",
     label: "Tramonto d’oro"
@@ -33,11 +34,11 @@ const MODELS = {
 
 const viewer = document.getElementById("viewer");
 const selName = document.getElementById("selName");
+const list = document.getElementById("names");
 
 const iosARLink = document.getElementById("iosARLink");
 const androidARLink = document.getElementById("androidARLink");
 const mvARBtn = document.getElementById("mvARBtn");
-const openStandalone = document.getElementById("openStandalone");
 
 function isIOS(){
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -45,35 +46,25 @@ function isIOS(){
 function isAndroid(){
   return /Android/.test(navigator.userAgent);
 }
-function inIframe(){
-  try { return window.self !== window.top; } catch(e){ return true; }
-}
 
-// filename -> ./encoded.ext (gestisce apostrofi e accenti)
+// filename -> ./encoded.ext (gestisce apostrofi, spazi, accenti)
 function urlFrom(filename){
   const parts = filename.split(".");
   const ext = parts.pop();
   const base = parts.join(".");
   return `./${encodeURIComponent(base)}.${ext}`;
 }
-// URL assoluto (richiesto da Scene Viewer)
+// URL assoluto per Scene Viewer
 function absUrlFrom(filename){
   const u = new URL(urlFrom(filename), window.location.href);
   return u.href;
 }
 
-// costruisce link scene-viewer per Android
-function sceneViewerUrl(fileAbsUrl, title){
-  const base = 'https://arvr.google.com/scene-viewer/1.0';
-  const params = new URLSearchParams({
-    file: fileAbsUrl,
-    mode: 'ar_only',
-    title: title
-  });
-  return `${base}?${params.toString()}`;
-}
-
 let currentKey = null;
+
+function selectRow(key){
+  document.querySelectorAll('#names li button').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+}
 
 function cambiaTela(key){
   const m = MODELS[key];
@@ -83,47 +74,40 @@ function cambiaTela(key){
   const glbURL = urlFrom(m.glb);
   const usdzURL = urlFrom(m.usdz);
 
-  // aggiorna preview
+  // Anteprima nel viewer
   viewer.src = glbURL;
   viewer.setAttribute("ios-src", usdzURL);
   selName.textContent = m.label;
+  selectRow(key);
 
-  // configura bottoni AR
-  const standaloneUrl = `${location.origin}${location.pathname}?m=${encodeURIComponent(key)}`;
-  openStandalone.href = standaloneUrl;
-
+  // Bottoni AR in base al device
   if(isIOS()){
     iosARLink.style.display = 'inline-block';
     androidARLink.style.display = 'none';
-    // link Quick Look deve puntare direttamente al .usdz
-    iosARLink.href = urlFrom(m.usdz);
-    mvARBtn.style.display = inIframe() ? 'none' : 'inline-block';
-    openStandalone.style.display = inIframe() ? 'inline-block' : 'none';
+    mvARBtn.style.display = 'none'; // Quick Look è più affidabile
+    iosARLink.href = usdzURL;       // link diretto al .usdz
   } else if (isAndroid()){
     iosARLink.style.display = 'none';
     androidARLink.style.display = 'inline-block';
-    // Scene Viewer vuole URL assoluto del GLB
-    androidARLink.href = sceneViewerUrl(absUrlFrom(m.glb), m.label);
-    mvARBtn.style.display = inIframe() ? 'none' : 'inline-block';
-    openStandalone.style.display = inIframe() ? 'inline-block' : 'none';
+    mvARBtn.style.display = 'none'; // Scene Viewer è più affidabile
+    androidARLink.href = `https://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(absUrlFrom(m.glb))}&mode=ar_only&title=${encodeURIComponent(m.label)}`;
   } else {
-    // Desktop: nessun AR, solo anteprima; offri standalone
+    // Desktop: niente AR, solo anteprima
     iosARLink.style.display = 'none';
     androidARLink.style.display = 'none';
     mvARBtn.style.display = 'none';
-    openStandalone.style.display = 'inline-block';
   }
 }
 
-// tasto AR di model-viewer (funziona bene solo FUORI da iframe)
-mvARBtn.addEventListener('click', () => {
-  viewer.activateAR();
+// click sui nomi
+list.addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-key]');
+  if(!btn) return;
+  cambiaTela(btn.dataset.key);
 });
 
-// pre-selezione da querystring
-(function init(){
-  const params = new URLSearchParams(location.search);
-  const key = params.get("m");
-  if(key && MODELS[key]) cambiaTela(key);
-  else cambiaTela(Object.keys(MODELS)[0]);
-})();
+// default: seleziona il primo elemento
+window.addEventListener('DOMContentLoaded', () => {
+  const firstKey = document.querySelector('#names button')?.dataset.key;
+  if(firstKey) cambiaTela(firstKey);
+});
