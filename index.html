@@ -4,7 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Quadri in AR</title>
-  <!-- model-viewer -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <link rel="stylesheet" href="./style.css" />
 </head>
@@ -17,12 +16,12 @@
   <!-- ELENCO TITOLI -->
   <section class="list">
     <ul id="names">
-      <li><button data-key="veglia_sul_mare">Veglia sul mare</button></li>
-      <li><button data-key="il_borgo_che_guarda_il_mare">Il borgo che guarda il mare</button></li>
-      <li><button data-key="il_castello_e_il_mare">Il castello e il mare</button></li>
-      <li><button data-key="libertà_al_tramonto">Libertà al tramonto</button></li>
+      <li><button data-key="veglia">Veglia sul mare</button></li>
+      <li><button data-key="borgo">Il borgo che guarda il mare</button></li>
+      <li><button data-key="castello">Il castello e il mare</button></li>
+      <li><button data-key="liberta">Libertà al tramonto</button></li>
       <li><button data-key="maremma">Maremma</button></li>
-      <li><button data-key="tramonto_d&#39;oro">Tramonto d’oro</button></li>
+      <li><button data-key="tramonto_doro">Tramonto d’oro</button></li>
     </ul>
   </section>
 
@@ -34,14 +33,9 @@
         <strong id="selName">—</strong>
       </div>
 
-      <!-- Bottoni AR (mostrati in base al device) -->
       <div class="cta">
-        <!-- iOS: Quick Look -->
-        <a id="iosARLink" class="btn primary" rel="ar" href="#" style="display:none">Vedi in AR (iOS)</a>
-        <!-- Android: Scene Viewer -->
-        <a id="androidARLink" class="btn primary" href="#" style="display:none">Vedi in AR (Android)</a>
-        <!-- Fallback: model-viewer attiva AR (solo fuori WebView strane) -->
-        <button id="mvARBtn" class="btn" style="display:none">Vedi in AR</button>
+        <!-- unico pulsante -->
+        <button id="openAR" class="btn primary">Vedi in AR</button>
       </div>
     </div>
 
@@ -53,15 +47,18 @@
       ar-scale="fixed"
       camera-controls
       environment-image="neutral"
-      exposure="1.0"
-      shadow-intensity="0.15"
+      exposure="1.1"
+      shadow-intensity="0.2"
       style="width:100%;height:62vh;background:#fff;border:1px solid #eee;border-radius:12px;">
       <div slot="poster" class="poster">Caricamento…</div>
     </model-viewer>
+
+    <!-- anchor nascosta solo per iOS Quick Look -->
+    <a id="iosArHidden" rel="ar" href="#" style="display:none"></a>
   </section>
 
   <footer class="foot">
-    <small>Se non parte l’AR, apri questa pagina direttamente nel browser del telefono (Safari/Chrome), non dentro app social.</small>
+    <small>Apri questa pagina direttamente in Safari/Chrome sul telefono (non dentro app social) per la migliore esperienza AR.</small>
   </footer>
 
   <script src="./script.js"></script>
