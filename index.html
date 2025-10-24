@@ -1,46 +1,50 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>AR Quadri</title>
-<link rel="stylesheet" href="style.css" />
-<script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Quadri in AR</title>
+  <link rel="stylesheet" href="style.css" />
+  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
 <body>
-<div class="wrap">
-<header class="header">
-<h1>Quadri in AR</h1>
-<p class="lead">Seleziona un quadro dal nome, vedi l’anteprima e aprilo in Realtà Aumentata con <strong>Vedi in AR</strong>.</p>
-</header>
+  <div class="wrap">
+    <h1>Quadri in AR</h1>
+    <p class="lead">Seleziona un quadro, vedi l’anteprima e poi tocca <strong>Vedi in AR</strong>.</p>
 
+    <!-- Elenco bottoni (2 per riga) -->
+    <div id="list" class="list-grid" aria-live="polite"></div>
 
-<section>
-<div id="list" class="list-grid" aria-live="polite"></div>
-</section>
+    <!-- Anteprima + azione AR -->
+    <section class="preview-card" aria-live="polite">
+      <div class="thumb">
+        <img id="preview" alt="Anteprima quadro" />
+        <div id="placeholder" class="placeholder" hidden>Seleziona un quadro per vedere l’anteprima</div>
+      </div>
+      <div class="info">
+        <h2 id="title" class="title">Nessun quadro selezionato</h2>
+        <p class="meta">AR: iOS (USDZ) · Android/Web (GLB)</p>
+        <div class="actions">
+          <button id="btnAR" class="btn" type="button" disabled>Vedi in AR</button>
+        </div>
+        <p id="hint" class="note">Il pulsante si attiva quando il file adatto alla tua piattaforma è disponibile.</p>
+      </div>
+    </section>
+  </div>
 
+  <!-- model-viewer nascosto (solo per avviare AR) -->
+  <model-viewer id="mv"
+    class="hidden-ar"
+    ar
+    ar-modes="webxr scene-viewer quick-look"
+    camera-controls
+    exposure="1"
+    shadow-intensity="0"
+    reveal="auto"
+    disable-zoom
+    environment-image="neutral">
+  </model-viewer>
 
-<section class="preview-card" aria-live="polite">
-<div class="thumb">
-<img id="preview" alt="Anteprima quadro" />
-<div id="placeholder" class="placeholder" hidden>Anteprima non disponibile</div>
-</div>
-<div class="info">
-<h2 id="title" class="title">Seleziona un quadro</h2>
-<p class="meta">AR: iOS (USDZ) · Android/Web (GLB)</p>
-<div class="actions">
-<button id="btnAR" class="btn" type="button" disabled>Vedi in AR</button>
-</div>
-<p id="hint" class="note">Suggerimento: se il pulsante è disabilitato, potrebbe mancare il file per questa piattaforma.</p>
-</div>
-</section>
-</div>
-
-
-<!-- model-viewer nascosto: usato solo per attivare l'AR -->
-<model-viewer id="mv" class="hidden-ar" ar ar-modes="webxr scene-viewer quick-look" camera-controls exposure="1" shadow-intensity="0" reveal="auto" disable-zoom environment-image="neutral"></model-viewer>
-
-
-<script defer src="script.js"></script>
+  <script defer src="script.js"></script>
 </body>
 </html>
