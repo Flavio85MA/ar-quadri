@@ -40,18 +40,30 @@ function clearThumbPreview(){
 }
 
 // Mostra JPG se disponibile; se manca o fallisce, usa model-viewer (GLB) come anteprima
-function showPosterOrModel(srcPoster, srcGlb){
+async function showPosterOrModel(srcPoster, srcGlb){
   const thumb = document.querySelector('.thumb');
 
   clearThumbPreview();
 
-  // Se non c'è poster, vai diretto su model-viewer
-  if (!srcPoster){
+  // 1) Prova il JPG (se dichiarato)
+  if (srcPoster){
+    const okPoster = await fileExists(srcPoster);
+    if (okPoster){
+      previewImg.src = path(srcPoster);
+      previewImg.style.display = 'block';
+      placeholder.hidden = true;
+      return;
+    }
+  }
+
+  // 2) Fallback: usa GLB in model-viewer visibile, con reveal=auto (render immediato)
+  const okGlb = await fileExists(srcGlb);
+  if (okGlb){
     const mvPrev = document.createElement('model-viewer');
     mvPrev.id = 'mvPreview';
     mvPrev.setAttribute('src', path(srcGlb));
     mvPrev.setAttribute('camera-controls', '');
-    mvPrev.setAttribute('reveal', 'interaction');
+    mvPrev.setAttribute('reveal', 'auto');           // <— qui il fix principale
     mvPrev.setAttribute('exposure', '1');
     mvPrev.setAttribute('shadow-intensity', '0');
     mvPrev.style.width  = '100%';
@@ -62,28 +74,9 @@ function showPosterOrModel(srcPoster, srcGlb){
     return;
   }
 
-  // Prova il JPG; altrimenti fallback al model-viewer
-  const test = new Image();
-  test.onload = () => {
-    previewImg.src = path(srcPoster);
-    previewImg.style.display = 'block';
-    placeholder.hidden = true;
-  };
-  test.onerror = () => {
-    const mvPrev = document.createElement('model-viewer');
-    mvPrev.id = 'mvPreview';
-    mvPrev.setAttribute('src', path(srcGlb));
-    mvPrev.setAttribute('camera-controls', '');
-    mvPrev.setAttribute('reveal', 'interaction');
-    mvPrev.setAttribute('exposure', '1');
-    mvPrev.setAttribute('shadow-intensity', '0');
-    mvPrev.style.width  = '100%';
-    mvPrev.style.height = '100%';
-    previewImg.style.display = 'none';
-    placeholder.hidden = true;
-    thumb.appendChild(mvPrev);
-  };
-  test.src = path(srcPoster);
+  // 3) Se manca pure il GLB, mostra placeholder
+  previewImg.style.display = 'none';
+  placeholder.hidden = false;
 }
 
 // --- RENDER LISTA BOTTONI ---
@@ -109,8 +102,8 @@ async function selectQuadro(i){
   selected = q;
   titleEl.textContent = q.nome;
 
-  // ANTEPRIMA: JPG se c'è, altrimenti model-viewer GLB
-  showPosterOrModel(q.poster, q.glb);
+  // ANTEPRIMA: JPG se c'è, altrimenti model-viewer GLB (reveal=auto)
+  await showPosterOrModel(q.poster, q.glb);
 
   // Config AR per il pulsante "Vedi in AR"
   mv.setAttribute('src', path(q.glb));
@@ -130,5 +123,4 @@ async function selectQuadro(i){
 
 // --- INIT ---
 buildList();
-// Se vuoi selezionare automaticamente il primo all'apertura, decommenta:
-// selectQuadro(0);
+// selectQuadro(0); // opzionale: seleziona il primo all'apertura
