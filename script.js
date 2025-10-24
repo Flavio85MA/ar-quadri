@@ -34,8 +34,27 @@ function clearThumbPreview(){
   if (old) old.remove();
 }
 
-// Mostra JPG; su mobile, se manca o fallisce -> placeholder.
-// Solo su desktop facciamo fallback 3D (model-viewer) per l’anteprima.
+// Normalizza un JPG su iOS disegnandolo su canvas e riassegnando il dataURL
+async function normalizeJpegForIOS(url){
+  // stessa origine: GitHub Pages del repo, quindi ok per canvas
+  const res = await fetch(path(url), { cache: 'no-store' });
+  if (!res.ok) throw new Error('Poster fetch failed');
+  const blob = await res.blob();
+  const bitmap = await createImageBitmap(blob); // rapido e gestisce orientamento
+  const maxW = 1600; // per sicurezza riduciamo un po' (opzionale)
+  const scale = Math.min(1, maxW / bitmap.width);
+  const w = Math.max(1, Math.round(bitmap.width * scale));
+  const h = Math.max(1, Math.round(bitmap.height * scale));
+  const canvas = document.createElement('canvas');
+  canvas.width = w; canvas.height = h;
+  const ctx = canvas.getContext('2d', { alpha: false, colorSpace: 'srgb' });
+  ctx.drawImage(bitmap, 0, 0, w, h);
+  // JPEG baseline sRGB
+  return canvas.toDataURL('image/jpeg', 0.9);
+}
+
+// Mostra JPG; su mobile iOS, se il JPG esiste lo normalizziamo via canvas.
+// Se il JPG manca/fallisce: su mobile mostriamo placeholder; su desktop fallback 3D.
 function showPosterOrModel(srcPoster, srcGlb){
   const thumb = document.querySelector('.thumb');
 
@@ -46,32 +65,42 @@ function showPosterOrModel(srcPoster, srcGlb){
 
   // 1) Prova JPG sempre
   if (srcPoster){
-    const test = new Image();
-    test.onload = () => {
-      previewImg.src = path(srcPoster);
-      previewImg.style.display = 'block';
-      placeholder.hidden = true;
-    };
-    test.onerror = () => {
-      // 2) Se fallisce: su mobile non usiamo 3D (per evitare schermo nero)
-      if (isMobile) {
+    if (isIOS) {
+      // iOS: normalizzazione canvas per evitare neri (EXIF/profili/progressivo)
+      normalizeJpegForIOS(srcPoster).then(dataURL => {
+        previewImg.src = dataURL;
+        previewImg.style.display = 'block';
+        placeholder.hidden = true;
+      }).catch(() => {
+        // su iOS se il poster fallisce mostriamo placeholder (niente 3D in preview)
         previewImg.style.display = 'none';
-        placeholder.hidden = false; // Anteprima non disponibile
-      } else {
-        // Desktop: fallback 3D
-        addModelPreview(srcGlb);
-      }
-    };
-    test.src = path(srcPoster);
-    return;
+        placeholder.hidden = false;
+      });
+      return;
+    } else {
+      // Android/Desktop: carico normalmente
+      const test = new Image();
+      test.onload = () => {
+        previewImg.src = path(srcPoster);
+        previewImg.style.display = 'block';
+        placeholder.hidden = true;
+      };
+      test.onerror = () => {
+        // Desktop: fallback 3D; Android: evitiamo 3D per coerenza? Lo lasciamo OFF per mobile
+        if (!isMobile) addModelPreview(srcGlb);
+        else { previewImg.style.display = 'none'; placeholder.hidden = false; }
+      };
+      test.src = path(srcPoster);
+      return;
+    }
   }
 
   // Nessun poster specificato
-  if (isMobile) {
+  if (!isMobile) {
+    addModelPreview(srcGlb); // solo desktop
+  } else {
     previewImg.style.display = 'none';
     placeholder.hidden = false;
-  } else {
-    addModelPreview(srcGlb);
   }
 
   function addModelPreview(glb){
@@ -115,14 +144,14 @@ async function selectQuadro(i){
   selected = q;
   titleEl.textContent = q.nome;
 
-  // ANTEPRIMA: su mobile SOLO JPG (altrimenti placeholder), su desktop JPG -> 3D se serve
+  // ANTEPRIMA: JPG (su iOS normalizzato via canvas), desktop fallback 3D
   showPosterOrModel(q.poster, q.glb);
 
   // Config AR per "Vedi in AR"
   mv.setAttribute('src', path(q.glb));
   mv.setAttribute('ios-src', path(q.usdz));
 
-  // Abilita pulsante AR in base alla piattaforma (senza check HEAD)
+  // Abilita pulsante AR in base alla piattaforma
   const likelyOK = isIOS ? !!q.usdz : !!q.glb;
   btnAR.disabled = !likelyOK;
 
