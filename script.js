@@ -12,10 +12,12 @@ const QUADRI = [
 
 // --- RILEVAMENTO PIATTAFORMA ---
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isAndroid = /Android/i.test(navigator.userAgent);
+const isMobile = isIOS || isAndroid;
 
 // --- ELEMENTI DOM ---
 const listEl      = document.getElementById('list');
-const previewImg  = document.getElementById('preview');
+const previewImg  = document.getElementById('preview');      // lo nasconderemo
 const placeholder = document.getElementById('placeholder');
 const titleEl     = document.getElementById('title');
 const btnAR       = document.getElementById('btnAR');
@@ -26,54 +28,68 @@ let selected = null;
 // --- UTILS ---
 function path(u){ return encodeURI(u); }
 
-// Ripulisce eventuale model-viewer usato come anteprima
 function clearThumbPreview(){
   const old = document.getElementById('mvPreview');
   if (old) old.remove();
+  const thumb = document.querySelector('.thumb');
+  thumb.style.backgroundImage = '';
 }
 
-// Mostra JPG se disponibile; se manca/errore, usa model-viewer (GLB) come anteprima
+// Setta la preview come background della .thumb (compatibile iOS)
+function setThumbBG(url){
+  const thumb = document.querySelector('.thumb');
+  thumb.style.backgroundImage = `url("${path(url)}")`;
+  thumb.style.backgroundSize = 'contain';
+  thumb.style.backgroundPosition = 'center';
+  thumb.style.backgroundRepeat = 'no-repeat';
+  // assicurati che l'<img> sia nascosto
+  previewImg.style.display = 'none';
+  placeholder.hidden = true;
+}
+
+// Mostra JPG; se manca/errore: su mobile placeholder; su desktop fallback 3D
 function showPosterOrModel(srcPoster, srcGlb){
   const thumb = document.querySelector('.thumb');
 
   clearThumbPreview();
+  previewImg.style.display = 'none';
+  placeholder.hidden = false;
 
-  // 1) Se ho un poster dichiarato, provo a caricarlo direttamente (senza HEAD)
+  // 1) prova a caricare il JPG sempre (senza canvas/fetch/bitmap)
   if (srcPoster){
     const test = new Image();
-    test.onload = () => {
-      previewImg.src = path(srcPoster);
-      previewImg.style.display = 'block';
-      placeholder.hidden = true;
-    };
-    test.onerror = () => {
-      // 2) Fallback immediato al GLB in 3D
-      addModelPreview(srcGlb);
-    };
+    test.onload = () => { setThumbBG(srcPoster); };
+    test.onerror = () => { onImgError(); };
     test.src = path(srcPoster);
     return;
   }
 
-  // Nessun poster: vado diretto al 3D
-  addModelPreview(srcGlb);
+  // Nessun poster specificato
+  onImgError();
+  return;
 
-  function addModelPreview(glb){
-    // Se manca anche il GLB, ri-mostra placeholder
-    if (!glb){
-      previewImg.style.display = 'none';
+  function onImgError(){
+    if (isMobile) {
+      // su iOS/Android: niente 3D in preview per evitare neri su qualche device
       placeholder.hidden = false;
       return;
     }
+    // Desktop: fallback 3D
+    addModelPreview(srcGlb);
+  }
+
+  function addModelPreview(glb){
+    if (!glb) { placeholder.hidden = false; return; }
     const mvPrev = document.createElement('model-viewer');
     mvPrev.id = 'mvPreview';
     mvPrev.setAttribute('src', path(glb));
     mvPrev.setAttribute('camera-controls', '');
-    mvPrev.setAttribute('reveal', 'auto');   // render immediato
+    mvPrev.setAttribute('reveal', 'auto');
     mvPrev.setAttribute('exposure', '1');
     mvPrev.setAttribute('shadow-intensity', '0');
+    mvPrev.setAttribute('environment-image', 'neutral');
     mvPrev.style.width  = '100%';
     mvPrev.style.height = '100%';
-    previewImg.style.display = 'none';
     placeholder.hidden = true;
     thumb.appendChild(mvPrev);
   }
@@ -93,7 +109,7 @@ function buildList(){
 }
 
 // --- SELEZIONE QUADRO ---
-async function selectQuadro(i){
+function selectQuadro(i){
   const buttons = listEl.querySelectorAll('.item');
   buttons.forEach(b => b.setAttribute('aria-current','false'));
   if (buttons[i]) buttons[i].setAttribute('aria-current','true');
@@ -102,15 +118,14 @@ async function selectQuadro(i){
   selected = q;
   titleEl.textContent = q.nome;
 
-  // ANTEPRIMA robusta: JPG oppure fallback 3D
+  // ANTEPRIMA: JPG come background (iOS-safe). Se fallisce: mobile=placeholder, desktop=3D
   showPosterOrModel(q.poster, q.glb);
 
   // Config AR per "Vedi in AR"
   mv.setAttribute('src', path(q.glb));
   mv.setAttribute('ios-src', path(q.usdz));
 
-  // Abilito il bottone AR in base alla piattaforma (senza HEAD)
-  // (Se almeno uno dei formati è presente, model-viewer gestirà il fallback)
+  // Abilita pulsante AR in base alla piattaforma
   const likelyOK = isIOS ? !!q.usdz : !!q.glb;
   btnAR.disabled = !likelyOK;
 
@@ -123,4 +138,4 @@ async function selectQuadro(i){
 
 // --- INIT ---
 buildList();
-// selectQuadro(0); // opzionale: seleziona il primo all'apertura
+// selectQuadro(0); // opzionale
