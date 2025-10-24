@@ -1,66 +1,88 @@
-<!doctype html>
-<html lang="it">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Quadri in AR</title>
-  <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-  <link rel="stylesheet" href="./style.css" />
-</head>
-<body>
-  <header class="topbar">
-    <h1>Seleziona il quadro e aprilo in AR</h1>
-    <p>Tocca un titolo per caricare l’anteprima, poi premi “Vedi in AR”.</p>
-  </header>
+<!DOCTYPE html>
+meta.className = 'meta';
+meta.textContent = 'AR: iOS (USDZ) · Android/Web (GLB)';
 
-  <!-- ELENCO TITOLI -->
-  <section class="list">
-    <ul id="names">
-      <li><button data-key="veglia">Veglia sul mare</button></li>
-      <li><button data-key="borgo">Il borgo che guarda il mare</button></li>
-      <li><button data-key="castello">Il castello e il mare</button></li>
-      <li><button data-key="liberta">Libertà al tramonto</button></li>
-      <li><button data-key="maremma">Maremma</button></li>
-      <li><button data-key="tramonto_doro">Tramonto d’oro</button></li>
-    </ul>
-  </section>
 
-  <!-- ANTEPRIMA + CTA -->
-  <section class="panel">
-    <div class="meta">
-      <div class="row">
-        <span>Selezionato:</span>
-        <strong id="selName">—</strong>
-      </div>
+// Bottone unico “Vedi in AR”
+const row = document.createElement('div');
+row.className = 'row wrap';
+const btnAR = document.createElement('button');
+btnAR.className = 'btn';
+btnAR.type = 'button';
+btnAR.textContent = 'Vedi in AR';
 
-      <div class="cta">
-        <!-- unico pulsante -->
-        <button id="openAR" class="btn primary">Vedi in AR</button>
-      </div>
-    </div>
 
-    <model-viewer id="viewer"
-      src=""
-      ios-src=""
-      alt="Anteprima quadro"
-      ar ar-modes="webxr scene-viewer quick-look"
-      ar-scale="fixed"
-      camera-controls
-      environment-image="neutral"
-      exposure="1.1"
-      shadow-intensity="0.2"
-      style="width:100%;height:62vh;background:#fff;border:1px solid #eee;border-radius:12px;">
-      <div slot="poster" class="poster">Caricamento…</div>
-    </model-viewer>
+// model-viewer nascosto per attivare AR cross‑platform
+const mv = document.createElement('model-viewer');
+mv.className = 'hidden-ar';
+mv.setAttribute('src', item.glb);
+mv.setAttribute('ios-src', item.usdz);
+mv.setAttribute('ar', '');
+mv.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
+mv.setAttribute('camera-controls', '');
+mv.setAttribute('exposure', '1');
+mv.setAttribute('shadow-intensity', '0');
+mv.setAttribute('reveal', 'auto');
+mv.setAttribute('disable-zoom', '');
+mv.setAttribute('environment-image', 'neutral');
+mv.setAttribute('quick-look-browsers', 'safari chrome');
+mv.crossOrigin = 'anonymous';
+mv.style.display = 'none'; // extra safety
 
-    <!-- anchor nascosta solo per iOS Quick Look -->
-    <a id="iosArHidden" rel="ar" href="#" style="display:none"></a>
-  </section>
 
-  <footer class="foot">
-    <small>Apri questa pagina direttamente in Safari/Chrome sul telefono (non dentro app social) per la migliore esperienza AR.</small>
-  </footer>
+// Abilita/disabilita il bottone a seconda dei file disponibili
+Promise.all([fileExists(item.glb), fileExists(item.usdz)]).then(([hasGLB, hasUSDZ]) => {
+const okForIOS = hasUSDZ; // Quick Look richiede USDZ
+const okForAndroid = hasGLB; // Scene Viewer/WebXR usa GLB/GLTF
 
-  <script src="./script.js"></script>
+
+let enabled = (isIOS && okForIOS) || (!isIOS && okForAndroid);
+if (!enabled && (okForIOS || okForAndroid)) {
+// In caso di piattaforma diversa ma con file presente, abilita comunque e lascia a model-viewer gestire i fallback
+enabled = true;
+}
+
+
+btnAR.disabled = !enabled;
+if (!enabled) {
+btnAR.classList.add('secondary');
+btnAR.textContent = 'AR non disponibile';
+}
+
+
+// Tooltip esplicativo su cosa manca
+if (isIOS && !okForIOS) btnAR.title = 'Manca il file USDZ per iOS';
+if (!isIOS && !okForAndroid) btnAR.title = 'Manca il file GLB per Android/Web';
+});
+
+
+btnAR.addEventListener('click', async () => {
+try {
+await mv.activateAR();
+} catch (e) {
+console.warn('AR non disponibile, dettagli:', e);
+alert('AR non disponibile su questo dispositivo o file non trovati.');
+}
+});
+
+
+row.appendChild(btnAR);
+
+
+// Assembla card
+card.appendChild(thumb);
+card.appendChild(title);
+card.appendChild(meta);
+card.appendChild(row);
+card.appendChild(mv);
+
+
+grid.appendChild(card);
+}
+}
+
+
+render();
+</script>
 </body>
 </html>
