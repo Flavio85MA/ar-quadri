@@ -17,7 +17,7 @@ const isMobile = isIOS || isAndroid;
 
 // --- ELEMENTI DOM ---
 const listEl      = document.getElementById('list');
-const previewImg  = document.getElementById('preview');
+const previewImg  = document.getElementById('preview');      // lo nasconderemo
 const placeholder = document.getElementById('placeholder');
 const titleEl     = document.getElementById('title');
 const btnAR       = document.getElementById('btnAR');
@@ -31,52 +31,36 @@ function path(u){ return encodeURI(u); }
 function clearThumbPreview(){
   const old = document.getElementById('mvPreview');
   if (old) old.remove();
+  const thumb = document.querySelector('.thumb');
+  thumb.style.backgroundImage = '';
 }
 
-// Ricodifica JPG su iOS usando <canvas> (senza fetch/createImageBitmap)
-function reencodeJpegIOS(img){
-  const maxW = 1600;
-  const scale = Math.min(1, maxW / Math.max(img.naturalWidth || img.width, 1));
-  const w = Math.max(1, Math.round((img.naturalWidth || img.width) * scale));
-  const h = Math.max(1, Math.round((img.naturalHeight || img.height) * scale));
-  const canvas = document.createElement('canvas');
-  canvas.width = w; canvas.height = h;
-  const ctx = canvas.getContext('2d', { alpha: false, colorSpace: 'srgb' });
-  ctx.drawImage(img, 0, 0, w, h);
-  return canvas.toDataURL('image/jpeg', 0.9);
+// Setta la preview come background della .thumb (compatibile iOS)
+function setThumbBG(url){
+  const thumb = document.querySelector('.thumb');
+  thumb.style.backgroundImage = `url("${path(url)}")`;
+  thumb.style.backgroundSize = 'contain';
+  thumb.style.backgroundPosition = 'center';
+  thumb.style.backgroundRepeat = 'no-repeat';
+  // assicurati che l'<img> sia nascosto
+  previewImg.style.display = 'none';
+  placeholder.hidden = true;
 }
 
-// Mostra JPG; su iOS se carica lo ricodifica via canvas per evitare neri.
-// Se il JPG fallisce: su mobile mostra placeholder; su desktop fallback 3D.
+// Mostra JPG; se manca/errore: su mobile placeholder; su desktop fallback 3D
 function showPosterOrModel(srcPoster, srcGlb){
   const thumb = document.querySelector('.thumb');
 
   clearThumbPreview();
   previewImg.style.display = 'none';
   placeholder.hidden = false;
-  previewImg.removeAttribute('src');
 
-  // 1) Prova JPG sempre
+  // 1) prova a caricare il JPG sempre (senza canvas/fetch/bitmap)
   if (srcPoster){
-    const img = new Image();
-    // stessa origine -> non serve CORS
-    img.onload = () => {
-      try {
-        if (isIOS) {
-          const dataURL = reencodeJpegIOS(img);
-          previewImg.src = dataURL;
-        } else {
-          previewImg.src = path(srcPoster);
-        }
-        previewImg.style.display = 'block';
-        placeholder.hidden = true;
-      } catch (e) {
-        // in caso di errori canvas, gestisci come onerror
-        onImgError();
-      }
-    };
-    img.onerror = onImgError;
-    img.src = path(srcPoster);
+    const test = new Image();
+    test.onload = () => { setThumbBG(srcPoster); };
+    test.onerror = () => { onImgError(); };
+    test.src = path(srcPoster);
     return;
   }
 
@@ -85,9 +69,8 @@ function showPosterOrModel(srcPoster, srcGlb){
   return;
 
   function onImgError(){
-    // Su mobile evitiamo il 3D in anteprima (schermi neri su Safari/Chrome)
     if (isMobile) {
-      previewImg.style.display = 'none';
+      // su iOS/Android: niente 3D in preview per evitare neri su qualche device
       placeholder.hidden = false;
       return;
     }
@@ -96,7 +79,7 @@ function showPosterOrModel(srcPoster, srcGlb){
   }
 
   function addModelPreview(glb){
-    if (!glb) { previewImg.style.display = 'none'; placeholder.hidden = false; return; }
+    if (!glb) { placeholder.hidden = false; return; }
     const mvPrev = document.createElement('model-viewer');
     mvPrev.id = 'mvPreview';
     mvPrev.setAttribute('src', path(glb));
@@ -107,7 +90,6 @@ function showPosterOrModel(srcPoster, srcGlb){
     mvPrev.setAttribute('environment-image', 'neutral');
     mvPrev.style.width  = '100%';
     mvPrev.style.height = '100%';
-    previewImg.style.display = 'none';
     placeholder.hidden = true;
     thumb.appendChild(mvPrev);
   }
@@ -136,7 +118,7 @@ function selectQuadro(i){
   selected = q;
   titleEl.textContent = q.nome;
 
-  // ANTEPRIMA: JPG (su iOS ricodificato via canvas), desktop fallback 3D
+  // ANTEPRIMA: JPG come background (iOS-safe). Se fallisce: mobile=placeholder, desktop=3D
   showPosterOrModel(q.poster, q.glb);
 
   // Config AR per "Vedi in AR"
@@ -156,4 +138,4 @@ function selectQuadro(i){
 
 // --- INIT ---
 buildList();
-// selectQuadro(0); // opzionale: seleziona il primo all'apertura
+// selectQuadro(0); // opzionale
