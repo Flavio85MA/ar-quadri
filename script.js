@@ -1,68 +1,81 @@
+// Mappa dei modelli: i file sono nella root del repo.
+// Useremo encodeURIComponent per gestire caratteri speciali (es. apostrofo).
 const MODELS = {
-  verticale: {
-    glb:  "./4quadro-verticale-40x60.glb",
-    usdz: "./4quadro-verticale-40x60.usdz",
-    orientation: "0deg 0deg 0deg",
-    label: "60 × 40 cm"
+  "veglia_sul_mare": {
+    glb: "veglia_sul_mare.glb",
+    usdz: "veglia_sul_mare.usdz",
+    label: "Veglia sul mare"
   },
-  orizzontale: {
-    glb:  "./4quadro-verticale-40x60.glb",
-    usdz: "./4quadro-verticale-40x60.usdz",
-    orientation: "0deg 0deg 90deg",
-    label: "40 × 60 cm"
+  "il_borgo_che_guarda_il_mare": {
+    glb: "il_borgo_che_guarda_il_mare.glb",
+    usdz: "il_borgo_che_guarda_il_mare.usdz",
+    label: "Il borgo che guarda il mare"
+  },
+  "il_castello_e_il_mare": {
+    glb: "il_castello_e_il_mare.glb",
+    usdz: "il_castello_e_il_mare.usdz",
+    label: "Il castello e il mare"
+  },
+  "libertà_al_tramonto": {
+    glb: "libertà_al_tramonto.glb",
+    usdz: "libertà_al_tramonto.usdz",
+    label: "Libertà al tramonto"
+  },
+  "maremma": {
+    glb: "maremma.glb",
+    usdz: "maremma.usdz",
+    label: "Maremma"
+  },
+  // nota: qui la chiave contiene l'apostrofo HTML (&#39;) perché arriva dall'onclick in index.html
+  "tramonto_d&#39;oro": {
+    glb: "tramonto_d'oro.glb",
+    usdz: "tramonto_d'oro.usdz",
+    label: "Tramonto d’oro"
   }
 };
 
-const mv = document.getElementById('mv');
-const btnAR = document.getElementById('enterAR');
-const sizeInfo = document.getElementById('sizeInfo');
-const selLabel = document.getElementById('selLabel');
+const viewer = document.getElementById("viewer");
+const selName = document.getElementById("selName");
+const btnOpenAR = document.getElementById("openAR");
 
-let current = null;
-
-function pick(button){
-  document.querySelectorAll('.card').forEach(b => b.classList.remove('active'));
-  button.classList.add('active');
-
-  const orient = button.dataset.orient;
-  const img = button.dataset.img;
-  const id = button.dataset.id;
-
-  current = { id, orient, img, label: button.dataset.label };
-
-  const m = MODELS[orient];
-  mv.setAttribute('src', m.glb);
-  mv.setAttribute('ios-src', m.usdz);
-  mv.orientation = m.orientation;
-
-  selLabel.textContent = button.dataset.label;
-  sizeInfo.textContent = m.label;
-
-  // Per texture vere: abiliteremo questa quando il GLB avrà il materiale "tela"
-  // applyPictureTexture(img).catch(()=>{});
+function urlFrom(filename){
+  // Converte il nome file in URL sicuro (gestisce apostrofi e accenti)
+  // Esempio: "tramonto_d'oro.glb" -> "tramonto_d%27oro.glb"
+  const parts = filename.split(".");
+  const ext = parts.pop();
+  const base = parts.join(".");
+  return `./${encodeURIComponent(base)}.${ext}`;
 }
 
-async function applyPictureTexture(imgUrl){
-  await mv.updateComplete;
-  const mat = mv.model?.materials?.find(m => /picture|canvas|tela/i.test(m.name));
-  if(!mat) return;
-  const tex = await mv.createTexture(imgUrl);
-  mat.pbrMetallicRoughness.setBaseColorTexture(tex);
+function cambiaTela(key){
+  const m = MODELS[key];
+  if(!m) return;
+
+  const glbURL = urlFrom(m.glb);
+  const usdzURL = urlFrom(m.usdz);
+
+  viewer.src = glbURL;
+  viewer.setAttribute("ios-src", usdzURL);
+  selName.textContent = m.label;
 }
 
-document.querySelectorAll('.card').forEach(btn => {
-  btn.addEventListener('click', () => pick(btn));
-});
-
-btnAR.addEventListener('click', () => {
-  if(!current){
-    const first = document.querySelector('.card');
-    if(first){ pick(first); }
+// Pulsante "Apri in AR" (chiama l’AR nativa del device)
+btnOpenAR.addEventListener("click", () => {
+  // Se non è selezionato nulla, prendi il primo
+  if(!viewer.src){
+    cambiaTela(Object.keys(MODELS)[0]);
   }
-  mv.activateAR();
+  viewer.activateAR();
 });
 
-window.addEventListener('DOMContentLoaded', () => {
-  const first = document.querySelector('.card[data-orient="verticale"]');
-  if(first) pick(first);
-});
+// Pre-selezione da querystring ?m=chiave (opzionale, utile per link da GHL)
+(function(){
+  const params = new URLSearchParams(location.search);
+  const key = params.get("m");
+  if(key && MODELS[key]){
+    cambiaTela(key);
+  } else {
+    // di default carica il primo modello
+    cambiaTela(Object.keys(MODELS)[0]);
+  }
+})();
