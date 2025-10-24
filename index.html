@@ -3,94 +3,53 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Quadri AR – Selettore 6 modelli</title>
-
-  <!-- model-viewer -->
+  <title>Quadri in AR</title>
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <header class="topbar">
-    <h1>Prova i quadri in AR</h1>
-    <p>Seleziona uno dei 6 formati: 4 verticali (60×40) e 2 orizzontali (40×60).</p>
+    <h1>Visualizza le tele in AR</h1>
+    <p>Scegli la tela e premi “Apri in AR”.</p>
   </header>
 
-  <!-- Selettore quadri (placeholder inline, compatibile iPhone) -->
-  <section class="picker">
-    <!-- 4 verticali -->
-    <button class="card" data-id="v1" data-orient="verticale" data-label="Verticale 60×40 #1" data-img="">
-      <img alt="Quadro verticale 1"
-           src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='533'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='20' fill='%236b7280'>Anteprima</text></svg>" />
-      <span>Verticale 60×40 #1</span>
-    </button>
-    <button class="card" data-id="v2" data-orient="verticale" data-label="Verticale 60×40 #2" data-img="">
-      <img alt="Quadro verticale 2"
-           src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='533'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='20' fill='%236b7280'>Anteprima</text></svg>" />
-      <span>Verticale 60×40 #2</span>
-    </button>
-    <button class="card" data-id="v3" data-orient="verticale" data-label="Verticale 60×40 #3" data-img="">
-      <img alt="Quadro verticale 3"
-           src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='533'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='20' fill='%236b7280'>Anteprima</text></svg>" />
-      <span>Verticale 60×40 #3</span>
-    </button>
-    <button class="card" data-id="v4" data-orient="verticale" data-label="Verticale 60×40 #4" data-img="">
-      <img alt="Quadro verticale 4"
-           src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='533'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='20' fill='%236b7280'>Anteprima</text></svg>" />
-      <span>Verticale 60×40 #4</span>
-    </button>
+  <main class="layout">
+    <aside class="sidebar">
+      <h2>Seleziona una tela</h2>
+      <div id="list" class="list"></div>
+    </aside>
 
-    <!-- 2 orizzontali -->
-    <button class="card" data-id="h1" data-orient="orizzontale" data-label="Orizzontale 40×60 #1" data-img="">
-      <img alt="Quadro orizzontale 1"
-           src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='533' height='400'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='20' fill='%236b7280'>Anteprima</text></svg>" />
-      <span>Orizzontale 40×60 #1</span>
-    </button>
-    <button class="card" data-id="h2" data-orient="orizzontale" data-label="Orizzontale 40×60 #2" data-img="">
-      <img alt="Quadro orizzontale 2"
-           src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='533' height='400'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial' font-size='20' fill='%236b7280'>Anteprima</text></svg>" />
-      <span>Orizzontale 40×60 #2</span>
-    </button>
-  </section>
+    <section class="stage">
+      <div class="viewer-wrap">
+        <model-viewer id="viewer"
+          src="./veglia_sul_mare.glb"
+          ios-src="./veglia_sul_mare.usdz"
+          alt="Anteprima tela"
+          ar ar-modes="webxr scene-viewer quick-look"
+          ar-scale="fixed"
+          camera-controls
+          environment-image="neutral"
+          exposure="1.0"
+          shadow-intensity="0.15"
+          style="width:100%;height:70vh;border-radius:12px;background:#f7f7f7;">
+          <div slot="poster" class="poster">Caricamento…</div>
+        </model-viewer>
 
-  <!-- Viewer + CTA AR -->
-  <section class="viewer-wrap">
-    <div class="meta">
-      <h2 id="selLabel">Seleziona un quadro</h2>
-      <p class="hint">Dimensioni reali:<br><span id="sizeInfo">—</span></p>
-      <div class="cta">
-        <button id="enterAR" class="primary">Apri in AR</button>
+        <div class="cta">
+          <button id="openAR" class="primary">Apri in AR</button>
+          <div id="meta" class="meta">—</div>
+        </div>
+
+        <p class="note">
+          Suggerimento iPhone: se il file <code>.usdz</code> si scarica invece di aprirsi in AR,
+          sposteremo i file USDZ su un hosting che imposta il MIME <code>model/vnd.usdz+zip</code>.
+        </p>
       </div>
-      <p class="tip">
-        Suggerimento: spostati davanti a una parete libera. L’AR posizionerà il quadro
-        alla scala corretta (60×40 o 40×60 cm).
-      </p>
-    </div>
-
-    <!-- Un solo model-viewer; aggiunta environment per evitare nero su mobile -->
-    <model-viewer id="mv"
-      src="./4quadro-verticale-40x60.glb"
-      ios-src="./4quadro-verticale-40x60.usdz"
-      ar ar-modes="webxr scene-viewer quick-look"
-      ar-scale="fixed"
-      environment-image="neutral"
-      camera-controls
-      camera-orbit="0deg 0deg auto"
-      field-of-view="22deg"
-      exposure="1.0"
-      shadow-intensity="0.15"
-      disable-pan
-      style="width:100%;height:520px;background:#f7f7f7;border-radius:16px">
-      <div class="poster" slot="poster">Caricamento…</div>
-    </model-viewer>
-  </section>
+    </section>
+  </main>
 
   <footer class="foot">
-    <small>
-      Nota iOS: se su alcuni iPhone il .usdz viene scaricato invece di aprirsi, dipende dal MIME
-      su GitHub Pages. Più avanti potremo spostare i file .usdz su un hosting che imposti
-      <code>model/vnd.usdz+zip</code>.
-    </small>
+    <small>© La tua galleria – AR demo</small>
   </footer>
 
   <script src="./script.js"></script>
