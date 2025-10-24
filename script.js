@@ -1,31 +1,32 @@
-// Mappa file (sono tutti in root)
+// Chiavi SEMPLICI (slug) per evitare problemi di click/encoding.
+// I nomi file sono esattamente quelli che hai in root.
 const MODELS = {
-  "veglia_sul_mare": {
+  veglia: {
     glb: "veglia_sul_mare.glb",
     usdz: "veglia_sul_mare.usdz",
     label: "Veglia sul mare"
   },
-  "il_borgo_che_guarda_il_mare": {
+  borgo: {
     glb: "il_borgo_che_guarda_il_mare.glb",
     usdz: "il_borgo_che_guarda_il_mare.usdz",
     label: "Il borgo che guarda il mare"
   },
-  "il_castello_e_il_mare": {
+  castello: {
     glb: "il_castello_e_il_mare.glb",
     usdz: "il_castello_e_il_mare.usdz",
     label: "Il castello e il mare"
   },
-  "libertà_al_tramonto": {
+  liberta: {
     glb: "libertà_al_tramonto.glb",
     usdz: "libertà_al_tramonto.usdz",
     label: "Libertà al tramonto"
   },
-  "maremma": {
+  maremma: {
     glb: "maremma.glb",
     usdz: "maremma.usdz",
     label: "Maremma"
   },
-  "tramonto_d&#39;oro": { // chiave dall'HTML (apostrofo codificato)
+  tramonto_doro: {
     glb: "tramonto_d'oro.glb",
     usdz: "tramonto_d'oro.usdz",
     label: "Tramonto d’oro"
@@ -35,10 +36,8 @@ const MODELS = {
 const viewer = document.getElementById("viewer");
 const selName = document.getElementById("selName");
 const list = document.getElementById("names");
-
-const iosARLink = document.getElementById("iosARLink");
-const androidARLink = document.getElementById("androidARLink");
-const mvARBtn = document.getElementById("mvARBtn");
+const openAR = document.getElementById("openAR");
+const iosArHidden = document.getElementById("iosArHidden");
 
 function isIOS(){
   return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -47,57 +46,72 @@ function isAndroid(){
   return /Android/.test(navigator.userAgent);
 }
 
-// filename -> ./encoded.ext (gestisce apostrofi, spazi, accenti)
-function urlFrom(filename){
+// Per URL assoluto (richiesto da Scene Viewer)
+function absUrlFrom(filename){
   const parts = filename.split(".");
   const ext = parts.pop();
   const base = parts.join(".");
-  return `./${encodeURIComponent(base)}.${ext}`;
-}
-// URL assoluto per Scene Viewer
-function absUrlFrom(filename){
-  const u = new URL(urlFrom(filename), window.location.href);
+  const u = new URL(`./${encodeURIComponent(base)}.${ext}`, window.location.href);
   return u.href;
 }
 
 let currentKey = null;
 
 function selectRow(key){
-  document.querySelectorAll('#names li button').forEach(b => b.classList.toggle('active', b.dataset.key === key));
+  document.querySelectorAll('#names li button')
+    .forEach(b => b.classList.toggle('active', b.dataset.key === key));
+}
+
+function setPreview(glb, usdz, label){
+  // forza ricarica pulita del viewer
+  viewer.pause && viewer.pause();
+  viewer.removeAttribute('reveal'); // workaround occasionali
+  viewer.src = ""; // reset
+  viewer.setAttribute("ios-src", "");
+  // assegna
+  viewer.src = `./${encodeURIComponent(glb)}`;
+  viewer.setAttribute("ios-src", `./${encodeURIComponent(usdz)}`);
+  selName.textContent = label;
+
+  // fallback anti-nero: se il GLB non ha IBL compatibile
+  viewer.addEventListener('error', () => {
+    selName.textContent = `${label} (errore caricamento anteprima)`;
+  }, { once: true });
 }
 
 function cambiaTela(key){
   const m = MODELS[key];
   if(!m) return;
   currentKey = key;
-
-  const glbURL = urlFrom(m.glb);
-  const usdzURL = urlFrom(m.usdz);
-
-  // Anteprima nel viewer
-  viewer.src = glbURL;
-  viewer.setAttribute("ios-src", usdzURL);
-  selName.textContent = m.label;
   selectRow(key);
-
-  // Bottoni AR in base al device
-  if(isIOS()){
-    iosARLink.style.display = 'inline-block';
-    androidARLink.style.display = 'none';
-    mvARBtn.style.display = 'none'; // Quick Look è più affidabile
-    iosARLink.href = usdzURL;       // link diretto al .usdz
-  } else if (isAndroid()){
-    iosARLink.style.display = 'none';
-    androidARLink.style.display = 'inline-block';
-    mvARBtn.style.display = 'none'; // Scene Viewer è più affidabile
-    androidARLink.href = `https://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(absUrlFrom(m.glb))}&mode=ar_only&title=${encodeURIComponent(m.label)}`;
-  } else {
-    // Desktop: niente AR, solo anteprima
-    iosARLink.style.display = 'none';
-    androidARLink.style.display = 'none';
-    mvARBtn.style.display = 'none';
-  }
+  setPreview(m.glb, m.usdz, m.label);
 }
+
+// Unico pulsante "Vedi in AR"
+openAR.addEventListener('click', () => {
+  if(!currentKey){
+    const first = document.querySelector('#names button')?.dataset.key;
+    if(first) cambiaTela(first); else return;
+  }
+  const m = MODELS[currentKey];
+  if(!m) return;
+
+  if(isIOS()){
+    // Quick Look: serve un <a rel="ar"> cliccato dall'utente
+    iosArHidden.href = `./${encodeURIComponent(m.usdz)}`;
+    iosArHidden.click();
+  } else if (isAndroid()){
+    // Scene Viewer con URL assoluto al GLB
+    const url = new URL('https://arvr.google.com/scene-viewer/1.0');
+    url.searchParams.set('file', absUrlFrom(m.glb));
+    url.searchParams.set('mode', 'ar_only');
+    url.searchParams.set('title', m.label);
+    window.location.href = url.toString();
+  } else {
+    // Desktop: prova activateAR del model-viewer (se supportato), altrimenti solo anteprima
+    if (viewer.activateAR) viewer.activateAR();
+  }
+});
 
 // click sui nomi
 list.addEventListener('click', (e) => {
