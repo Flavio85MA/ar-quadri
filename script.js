@@ -14,24 +14,17 @@ const QUADRI = [
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 
 // --- ELEMENTI DOM ---
-const listEl     = document.getElementById('list');
-const previewImg = document.getElementById('preview');
-const placeholder= document.getElementById('placeholder');
-const titleEl    = document.getElementById('title');
-const btnAR      = document.getElementById('btnAR');
-const mv         = document.getElementById('mv');
+const listEl      = document.getElementById('list');
+const previewImg  = document.getElementById('preview');
+const placeholder = document.getElementById('placeholder');
+const titleEl     = document.getElementById('title');
+const btnAR       = document.getElementById('btnAR');
+const mv          = document.getElementById('mv');
 
 let selected = null;
 
 // --- UTILS ---
 function path(u){ return encodeURI(u); }
-
-async function fileExists(url){
-  try{
-    const res = await fetch(path(url), { method:'HEAD', cache:'no-store' });
-    return res.ok;
-  } catch { return false; }
-}
 
 // Ripulisce eventuale model-viewer usato come anteprima
 function clearThumbPreview(){
@@ -39,31 +32,43 @@ function clearThumbPreview(){
   if (old) old.remove();
 }
 
-// Mostra JPG se disponibile; se manca o fallisce, usa model-viewer (GLB) come anteprima
-async function showPosterOrModel(srcPoster, srcGlb){
+// Mostra JPG se disponibile; se manca/errore, usa model-viewer (GLB) come anteprima
+function showPosterOrModel(srcPoster, srcGlb){
   const thumb = document.querySelector('.thumb');
 
   clearThumbPreview();
 
-  // 1) Prova il JPG (se dichiarato)
+  // 1) Se ho un poster dichiarato, provo a caricarlo direttamente (senza HEAD)
   if (srcPoster){
-    const okPoster = await fileExists(srcPoster);
-    if (okPoster){
+    const test = new Image();
+    test.onload = () => {
       previewImg.src = path(srcPoster);
       previewImg.style.display = 'block';
       placeholder.hidden = true;
-      return;
-    }
+    };
+    test.onerror = () => {
+      // 2) Fallback immediato al GLB in 3D
+      addModelPreview(srcGlb);
+    };
+    test.src = path(srcPoster);
+    return;
   }
 
-  // 2) Fallback: usa GLB in model-viewer visibile, con reveal=auto (render immediato)
-  const okGlb = await fileExists(srcGlb);
-  if (okGlb){
+  // Nessun poster: vado diretto al 3D
+  addModelPreview(srcGlb);
+
+  function addModelPreview(glb){
+    // Se manca anche il GLB, ri-mostra placeholder
+    if (!glb){
+      previewImg.style.display = 'none';
+      placeholder.hidden = false;
+      return;
+    }
     const mvPrev = document.createElement('model-viewer');
     mvPrev.id = 'mvPreview';
-    mvPrev.setAttribute('src', path(srcGlb));
+    mvPrev.setAttribute('src', path(glb));
     mvPrev.setAttribute('camera-controls', '');
-    mvPrev.setAttribute('reveal', 'auto');           // <— qui il fix principale
+    mvPrev.setAttribute('reveal', 'auto');   // render immediato
     mvPrev.setAttribute('exposure', '1');
     mvPrev.setAttribute('shadow-intensity', '0');
     mvPrev.style.width  = '100%';
@@ -71,12 +76,7 @@ async function showPosterOrModel(srcPoster, srcGlb){
     previewImg.style.display = 'none';
     placeholder.hidden = true;
     thumb.appendChild(mvPrev);
-    return;
   }
-
-  // 3) Se manca pure il GLB, mostra placeholder
-  previewImg.style.display = 'none';
-  placeholder.hidden = false;
 }
 
 // --- RENDER LISTA BOTTONI ---
@@ -102,17 +102,17 @@ async function selectQuadro(i){
   selected = q;
   titleEl.textContent = q.nome;
 
-  // ANTEPRIMA: JPG se c'è, altrimenti model-viewer GLB (reveal=auto)
-  await showPosterOrModel(q.poster, q.glb);
+  // ANTEPRIMA robusta: JPG oppure fallback 3D
+  showPosterOrModel(q.poster, q.glb);
 
-  // Config AR per il pulsante "Vedi in AR"
+  // Config AR per "Vedi in AR"
   mv.setAttribute('src', path(q.glb));
   mv.setAttribute('ios-src', path(q.usdz));
 
-  const [hasGLB, hasUSDZ] = await Promise.all([fileExists(q.glb), fileExists(q.usdz)]);
-  let enabled = (isIOS && hasUSDZ) || (!isIOS && hasGLB);
-  if (!enabled && (hasGLB || hasUSDZ)) enabled = true; // consenti fallback gestito da model-viewer
-  btnAR.disabled = !enabled;
+  // Abilito il bottone AR in base alla piattaforma (senza HEAD)
+  // (Se almeno uno dei formati è presente, model-viewer gestirà il fallback)
+  const likelyOK = isIOS ? !!q.usdz : !!q.glb;
+  btnAR.disabled = !likelyOK;
 
   btnAR.onclick = async () => {
     if (!selected) return;
