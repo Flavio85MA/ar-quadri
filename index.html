@@ -4,62 +4,64 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Quadri in AR</title>
+  <!-- model-viewer -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
   <header class="topbar">
-    <h1>Scegli la tela e aprila in AR</h1>
-    <p>Seleziona un quadro. Su iPhone/iPad usa “Apri in AR”. Su Android usa “Apri con Scene Viewer”.</p>
+    <h1>Seleziona il quadro e aprilo in AR</h1>
+    <p>Tocca un titolo per caricare l’anteprima, poi premi “Vedi in AR”.</p>
   </header>
 
-  <section class="controls">
-    <div class="buttons">
-      <button onclick="cambiaTela('veglia_sul_mare')">Veglia sul mare</button>
-      <button onclick="cambiaTela('il_borgo_che_guarda_il_mare')">Il borgo che guarda il mare</button>
-      <button onclick="cambiaTela('il_castello_e_il_mare')">Il castello e il mare</button>
-      <button onclick="cambiaTela('libertà_al_tramonto')">Libertà al tramonto</button>
-      <button onclick="cambiaTela('maremma')">Maremma</button>
-      <button onclick="cambiaTela('tramonto_d&#39;oro')">Tramonto d’oro</button>
-    </div>
-
-    <div class="now">
-      <span>Selezionato:</span> <strong id="selName">—</strong>
-
-      <!-- iOS: link Quick Look -->
-      <a id="iosARLink" class="primary" rel="ar" href="#" style="display:none">Apri in AR (iOS)</a>
-
-      <!-- ANDROID: link Scene Viewer -->
-      <a id="androidARLink" class="primary" href="#" style="display:none">Apri con Scene Viewer (Android)</a>
-
-      <!-- Fallback model-viewer AR (solo fuori da iframe) -->
-      <button id="mvARBtn" class="primary" style="display:none">Apri in AR</button>
-
-      <!-- Se la pagina è in iframe (es. GHL) -->
-      <a id="openStandalone" class="secondary" href="#" style="display:none">Apri a schermo intero</a>
-    </div>
+  <!-- ELENCO TITOLI -->
+  <section class="list">
+    <ul id="names">
+      <li><button data-key="veglia_sul_mare">Veglia sul mare</button></li>
+      <li><button data-key="il_borgo_che_guarda_il_mare">Il borgo che guarda il mare</button></li>
+      <li><button data-key="il_castello_e_il_mare">Il castello e il mare</button></li>
+      <li><button data-key="libertà_al_tramonto">Libertà al tramonto</button></li>
+      <li><button data-key="maremma">Maremma</button></li>
+      <li><button data-key="tramonto_d&#39;oro">Tramonto d’oro</button></li>
+    </ul>
   </section>
 
-  <section class="viewer">
+  <!-- ANTEPRIMA + CTA -->
+  <section class="panel">
+    <div class="meta">
+      <div class="row">
+        <span>Selezionato:</span>
+        <strong id="selName">—</strong>
+      </div>
+
+      <!-- Bottoni AR (mostrati in base al device) -->
+      <div class="cta">
+        <!-- iOS: Quick Look -->
+        <a id="iosARLink" class="btn primary" rel="ar" href="#" style="display:none">Vedi in AR (iOS)</a>
+        <!-- Android: Scene Viewer -->
+        <a id="androidARLink" class="btn primary" href="#" style="display:none">Vedi in AR (Android)</a>
+        <!-- Fallback: model-viewer attiva AR (solo fuori WebView strane) -->
+        <button id="mvARBtn" class="btn" style="display:none">Vedi in AR</button>
+      </div>
+    </div>
+
     <model-viewer id="viewer"
       src=""
       ios-src=""
-      alt="Visualizzatore 3D"
+      alt="Anteprima quadro"
       ar ar-modes="webxr scene-viewer quick-look"
       ar-scale="fixed"
       camera-controls
       environment-image="neutral"
       exposure="1.0"
       shadow-intensity="0.15"
-      style="width:100%;height:70vh;background:#fff;border:1px solid #eee;border-radius:12px;">
+      style="width:100%;height:62vh;background:#fff;border:1px solid #eee;border-radius:12px;">
       <div slot="poster" class="poster">Caricamento…</div>
     </model-viewer>
   </section>
 
   <footer class="foot">
-    <small>
-      Suggerimento: se sei dentro una pagina GHL (iframe), usa “Apri a schermo intero”, poi il bottone AR.
-    </small>
+    <small>Se non parte l’AR, apri questa pagina direttamente nel browser del telefono (Safari/Chrome), non dentro app social.</small>
   </footer>
 
   <script src="./script.js"></script>
