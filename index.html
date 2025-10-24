@@ -12,10 +12,8 @@
     <h1>Quadri in AR</h1>
     <p class="lead">Seleziona un quadro, vedi l’anteprima e poi tocca <strong>Vedi in AR</strong>.</p>
 
-    <!-- Elenco bottoni (2 per riga) -->
     <div id="list" class="list-grid" aria-live="polite"></div>
 
-    <!-- Anteprima + azione AR -->
     <section class="preview-card" aria-live="polite">
       <div class="thumb">
         <img id="preview" alt="Anteprima quadro" />
@@ -27,22 +25,13 @@
         <div class="actions">
           <button id="btnAR" class="btn" type="button" disabled>Vedi in AR</button>
         </div>
-        <p id="hint" class="note">Il pulsante si attiva quando il file adatto alla tua piattaforma è disponibile.</p>
+        <p class="note">Il pulsante si attiva quando il file adatto alla tua piattaforma è disponibile.</p>
       </div>
     </section>
   </div>
 
-  <!-- model-viewer nascosto (solo per avviare AR) -->
-  <model-viewer id="mv"
-    class="hidden-ar"
-    ar
-    ar-modes="webxr scene-viewer quick-look"
-    camera-controls
-    exposure="1"
-    shadow-intensity="0"
-    reveal="auto"
-    disable-zoom
-    environment-image="neutral">
+  <model-viewer id="mv" class="hidden-ar" ar ar-modes="webxr scene-viewer quick-look"
+    camera-controls exposure="1" shadow-intensity="0" reveal="auto" disable-zoom environment-image="neutral">
   </model-viewer>
 
   <script defer src="script.js"></script>
