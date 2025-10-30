@@ -1,27 +1,40 @@
-/* === GRID: 2 per riga anche su mobile === */
+:root{
+  --bg:#0f172a;            /* scuro per contrasto, niente “tutto bianco” */
+  --text:#e5e7eb;
+  --muted:#94a3b8;
+  --card:#111827;
+  --border:#1f2937;
+  --radius:16px;
+  --btn-item:#1b3a5d;      /* come landing (bottoni elenco) */
+  --btn-cta:#5ccfc9;       /* come landing (CTA) */
+  --white:#fff;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif}
+.wrap{max-width:1100px;margin:24px auto 48px;padding:0 16px}
+h1{margin:0 0 6px;font-size:24px}
+.lead{margin:0 0 16px;color:var(--muted)}
+
 .list-grid{
   display:grid;
-  grid-template-columns:1fr 1fr; /* 2 colonne fin da mobile */
+  grid-template-columns:1fr 1fr;  /* 2 per riga anche su mobile */
   gap:10px;
-  margin-top:16px
 }
 @media(min-width:900px){
-  .list-grid{ grid-template-columns:1fr 1fr } /* resta 2 col per coerenza */
+  .list-grid{ grid-template-columns:1fr 1fr }
 }
 
-/* === Bottoni elenco quadri (come landing, ma con i tuoi colori) === */
 .item{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   padding:12px 16px;
-  border:0;                     /* niente bordo visibile */
-  border-radius:15%;            /* come landing */
-  background:var(--primary);    /* mantieni il tuo colore */
-  color:var(--primary-contrast);
-  font-family:inherit;
-  font-weight:700;              /* più “deciso” */
-  font-size:19px;               /* come landing */
+  border:0;
+  border-radius:15%;
+  background:var(--btn-item);
+  color:var(--white);
+  font-weight:700;
+  font-size:19px;
   line-height:1;
   cursor:pointer;
   text-align:center;
@@ -32,17 +45,22 @@
   outline-offset:2px;
 }
 
-/* === Pulsante VEDI IN AR (come landing, ma con i tuoi colori) === */
+.actions{ margin-top:18px; display:flex; gap:10px; }
 .btn{
   appearance:none;
-  border:0;                     /* niente bordo visibile */
-  border-radius:15%;            /* come landing */
-  background:var(--primary);    /* mantieni il tuo colore */
-  color:var(--primary-contrast);
+  border:0;
+  border-radius:15%;
+  background:var(--btn-cta);
+  color:#fff;
   padding:12px 18px;
-  font-weight:700;              /* più “deciso” */
-  font-size:20px;               /* come landing (CTA) */
+  font-weight:700;
+  font-size:20px;
   line-height:1;
   cursor:pointer;
 }
 .btn:disabled{ opacity:.5; cursor:not-allowed }
+
+/* model-viewer invisibile */
+.hidden-ar{
+  width:1px;height:1px;position:absolute;left:-9999px;top:-9999px;opacity:0;pointer-events:none
+}
