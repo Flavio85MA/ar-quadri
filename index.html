@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Quadri in AR</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- Shim model-viewer (serve anche per iOS Quick Look) -->
+  <!-- Shim model-viewer (serve per iOS Quick Look / Android Scene Viewer) -->
   <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
 </head>
 <body>
@@ -13,19 +13,21 @@
     <h1>Quadri in AR</h1>
     <p class="lead">Seleziona un quadro e tocca <strong>Vedi in AR</strong>.</p>
 
+    <!-- Lista quadri (2 per riga anche su mobile) -->
     <div id="list" class="list-grid" aria-live="polite"></div>
 
+    <!-- Azione AR -->
     <div class="actions">
-      <button id="btnAR" class="btn" type="button" disabled>Vedi in AR</button>
+      <button id="btnAR" class="btn-cta" type="button" disabled>Vedi in AR</button>
+      <small class="note">Il pulsante si attiva dopo aver selezionato un quadro.</small>
     </div>
   </div>
 
-  <!-- model-viewer “carrier” invisibile per attivare AR -->
+  <!-- model-viewer “nascosto” che attiva la AR -->
   <model-viewer id="mv" class="hidden-ar"
-    ar
-    ar-modes="scene-viewer webxr quick-look"
-    ar-placement="wall"
-    ar-scale="fixed">
+    ar ar-modes="webxr scene-viewer quick-look"
+    ar-placement="wall" ar-scale="fixed"
+    camera-controls exposure="1" shadow-intensity="0" reveal="auto">
   </model-viewer>
 
   <script defer src="script.js"></script>
